@@ -74,7 +74,7 @@ append `.json` to any URL while inside the board and look for `id: "BOARD_ID",`
 
 `key`, `token` and `board_id` with the values obtained in steps 1-3
 
-replace `repo_link` with your repo root URL
+replace `repo_link` with your repo root URL in the `post-to-trello` script
 
 
 
