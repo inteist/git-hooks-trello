@@ -43,7 +43,16 @@ var board_id = "<REPLACE>"
 /*----------------------------------*/
 
 
-// ---------------------------------------  COLORS + ERR -----------------------------------------------------
+// ------------------------------------ .: PACKAGE :. -------------------------------------------
+//
+//  ██████╗ ██████╗ ██╗      ██████╗ ██████╗ ███████╗
+// ██╔════╝██╔═══██╗██║     ██╔═══██╗██╔══██╗██╔════╝
+// ██║     ██║   ██║██║     ██║   ██║██████╔╝███████╗
+// ██║     ██║   ██║██║     ██║   ██║██╔══██╗╚════██║
+// ╚██████╗╚██████╔╝███████╗╚██████╔╝██║  ██║███████║
+//  ╚═════╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+//
+// ------------------------------------  .:=========:.  ------------------------------------------
 var colors = require('colors');
 colors.setTheme({
     input: 'grey',
@@ -56,6 +65,7 @@ colors.setTheme({
     error: 'red'
 });
 
+/*                                  CUSTOM LOGGING METHODS USING COLORS                   */
 function error(string) {
     console.log(string.error); // using the colors plugin
 }
@@ -68,9 +78,7 @@ function warn(string) {
     console.warn(string.warn); // using the colors plugin
 }
 
-
-
-// --------------------------------------------------------------------------------------------
+// ----------------------------------- .: END PACKAGE :. ------------------------------------------
 
 
 
@@ -86,7 +94,7 @@ git.stdout.on('data', function (d) {
 
 
 git.on('exit', function () {
-    var m = data.match(/(trello|card|close|archive|fix)e?s?\D?(\#?)([0-9]+)(.+)/i);
+    var m = data.match(/(msg|comment|trello|card|close|archive|fix)e?s?\D?(\#?)([0-9]+)(.+)/i);
     if (m) {
         var commit = data.match(/commit\s+(.+)/i)[1];
         var author = data.match(/author:\s+([^<]+)/i)[1];
@@ -104,7 +112,11 @@ git.on('exit', function () {
                 return;
             }
 
-            var comment = 'Commit by : ' + author + '\nDate : ' + date + '\nCommit : ' + commit + '\nMessage : ' + cmsg;
+            repo_link = repo_link.replace(/\/?$/, '/');
+            short_commit = commit.substring(0, 7);
+            var commitLink = '[' + short_commit + '](' + repo_link + 'commit/' + commit + ')';
+
+            var comment = 'Commit by : ' + author + '\nDate : ' + date + '\nCommit : ' + commitLink + '\nMessage : ' + cmsg;
             add_comment(cardData.id, comment, function (err, commentResponse) {
                 if (err) {
                     throw err;
@@ -112,15 +124,12 @@ git.on('exit', function () {
                     //console.dir(data);
                     info('Card ' + cardData.name + ' updated');
 
-                    if (cardData.closed) {
-                        warn('Card is already closed');
-                        return;
-                    }
-
                     // Archive/Close the card if needed
-                    if (verb === 'trello' || verb === 'card') {
-                        return;
-                    } else {
+                    if (verb.indexOf('close') >= 0 || verb.indexOf('archive') >= 0 || verb.indexOf('fix') >= 0) {
+                        if (cardData.closed) {
+                            warn('Card is already closed');
+                            return;
+                        }
                         update_card(cardData.id, {
                             closed: true
                         }, function (err, updCardResponse) {
