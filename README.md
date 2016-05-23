@@ -1,0 +1,85 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+
+- [About](#about)
+- [Versions](#versions)
+    - [1.0](#10)
+- [Installation How-To](#installation-how-to)
+  - [Environment config](#environment-config)
+  - [Script Config](#script-config)
+  - [Get card IDs to show in Trello](#get-card-ids-to-show-in-trello)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+
+# About
+
+This is a full suit of tools to be able to enable git hooks to interface with Trello
+
+
+# Versions
+
+### 1.0
+- add comments with associated git commit and alternatively close/archive issues from git commits
+
+
+# Installation How-To
+
+
+## Environment config
+
+- Install node
+- Install `node_trello` and `colors` packages globally
+
+```bash
+sudo npm install -g node-trello
+```
+
+```bash
+sudo npm install -g node-trello
+```
+- Clone [this repo](https://gitlab.com/inteist/git-hooks-trello) and copy the files to your project's `.git/hooks` folder
+- Make the hooks executable
+```bash
+chmod +x .git/hooks/*
+```
+
+- run `git init` to reinitialize the repository to make sure it picks the new hooks
+
+
+
+## Script Config
+
+- **STEP 1** - get an app key:
+
+`https://trello.com/1/appKey/generate`
+
+
+- **STEP 2** - get an app token using app key from step 1
+
+`https://trello.com/1/connect?key=<KEY_FROM_STEP_1>&name=git-hook&expiration=never&response_type=token&scope=read,write`
+
+(replace KEY_FROM_STEP_1 with an actual key you got in STEP 1)
+
+- **STEP 3** - get board ID:
+
+append `.json` to any URL while inside the board and look for `id: "BOARD_ID",`
+
+- **STEP 4** replace
+
+`key`, `token` and `board_id` with the values obtained in steps 1-3
+
+replace `repo_link` with your repo root URL
+
+
+
+## Get card IDs to show in Trello
+
+Use this bookmarklet:
+
+```js
+javascript:!function(){var o=$(".card-short-id");o.each(function(){$(this).text($(this).text().replace("","").replace("","").replace("N.º ", ""))});o.hasClass("hide")?o.removeClass("hide").css({"font-weight":"normal","font-size":".9em","margin-right":"5px",padding:"2.3px 6px",background:$("body").css("background-color"),"border-radius":"10px",color:"#EE433E"}):o.addClass("hide")}();
+
+```
