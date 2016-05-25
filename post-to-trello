@@ -10,22 +10,22 @@ javascript:!function(){var o=$(".card-short-id");o.each(function(){$(this).text(
 
 # SCRIPT CONFIG:
 
-### STEP 1 - get an app key:
+### STEP 1 - get an app KEY:
 
 https://trello.com/1/appKey/generate
 
 
-### STEP 3 - get an app token using app key from step 1
+### STEP 3 - get an app TOKEN using app KEY from step 1
 
-https://trello.com/1/connect?key=<KEY_FROM_STEP_1>&name=git-hook&expiration=never&response_type=token&scope=read,write
-(replace KEY_FROM_STEP_1 with an actual key)
+https://trello.com/1/connect?KEY=<KEY_FROM_STEP_1>&name=git-hook&expiration=never&response_type=TOKEN&scope=read,write
+(replace KEY_FROM_STEP_1 with an actual KEY)
 
 ### STEP 3 - get board ID:
 
 append `.json` to any URL while inside the board and look for `id: "BOARD_ID",`
 
 ### STEP 4 replace
-`key`, `token` and `board_id` with the values obtained in steps 1-3
+`KEY`, `TOKEN` and `board_id` with the values obtained in steps 1-3
 
 replace `repo_link` with your repo root URL
 
@@ -34,13 +34,45 @@ replace `repo_link` with your repo root URL
 /*----------------------------------*/
 /*          START CONFIG HERE       */
 
-var key = "<REPLACE>";
-var token = "<REPLACE>";
-var repo_link = "<REPLACE>"
-var board_id = "<REPLACE>"
+
+var KEY = "<REPLACE>";
+var TOKEN = "<REPLACE>";
+var REPO_LINK = "<REPLACE>";
+var BOARD_ID = "<REPLACE>";
+
 
 /*            END CONFIG            */
 /*----------------------------------*/
+
+
+/*
+
+
+
+
+
+
+
+
+                    Intentionally Left BLANK
+
+
+
+
+
+
+
+*/
+
+
+var EXIT_CODE_WRONG_CONFIG = 99;
+
+if(KEY.indexOf("REPLACE") > 0 || TOKEN.indexOf("REPLACE") > 0 || REPO_LINK.indexOf("REPLACE") > 0  || BOARD_ID.indexOf("REPLACE") > 0) {
+    error("Script not configured! Open 'post-to-trello' file and replace all the <REPLACE> values in the config section with correct values");
+
+    process.exit(EXIT_CODE_WRONG_CONFIG);
+}
+
 
 
 // ------------------------------------ .: PACKAGE :. -------------------------------------------
@@ -83,7 +115,7 @@ function warn(string) {
 
 
 var Trello = require("node-trello");
-var t = new Trello(key, token);
+var t = new Trello(KEY, TOKEN);
 var spawn = require('child_process').spawn;
 var git = spawn('git', ['log', '-1', 'HEAD']);
 var data = "";
@@ -93,92 +125,129 @@ git.stdout.on('data', function (d) {
 });
 
 
+
 git.on('exit', function () {
-    var m = data.match(/(msg|comment|trello|card|close|archive|fix)e?s?\D?(\#?)([0-9]+)(.+)/i);
-    if (m) {
-        var commit = data.match(/commit\s+(.+)/i)[1];
-        var author = data.match(/author:\s+([^<]+)/i)[1];
-        var date = data.match(/date:\s+(.+)/i)[1];
 
-        var verb = m[1].toLowerCase(); // action verb
-        var card = m[3]; // card ID (numeric)
-        var cmsg = m[4]; // commit message post the card action
-        //get card
+    var commitInfo = {};
+    commitInfo.commit = data.match(/commit\s+(.+)/i)[1];
+    commitInfo.author = data.match(/author:\s+([^<]+)/i)[1];
+    commitInfo.date = data.match(/date:\s+(.+)/i)[1];
+    commitInfo.msg = data.match(/date:\s+(.+)\s*(.*)/i)[2]; // whatever comes after "Date:" - anything is the commit message
 
-        get_card(board_id, card, function (err, cardData) {
 
-            if (err) {
-                warn("[ERROR] Cannot find card matching ID " + card);
-                return;
+
+    var re = /((address|msg|comment|note|card|close|archive|fix)e?s?(\D)*(\#?)([0-9]+)\ ?)/ig;
+    var str = data;
+    var m;
+
+
+    var matchesArr;
+    var cardActionsArr = [];
+    do {
+        matchesArr = [];
+        // Collect all matches
+        while ((m = re.exec(str)) !== null) {
+            if (m.index === re.lastIndex) {
+                re.lastIndex++;
             }
-
-            repo_link = repo_link.replace(/\/?$/, '/');
-            short_commit = commit.substring(0, 7);
-            var commitLink = '[' + short_commit + '](' + repo_link + 'commit/' + commit + ')';
-
-            var comment = 'Commit by : ' + author + '\nDate : ' + date + '\nCommit : ' + commitLink + '\nMessage : ' + cmsg;
-            add_comment(cardData.id, comment, function (err, commentResponse) {
-                if (err) {
-                    throw err;
-                } else {
-                    //console.dir(data);
-                    info('Card ' + cardData.name + ' updated');
-
-                    // Archive/Close the card if needed
-                    if (verb.indexOf('close') >= 0 || verb.indexOf('archive') >= 0 || verb.indexOf('fix') >= 0) {
-                        if (cardData.closed) {
-                            warn('Card is already closed');
-                            return;
-                        }
-                        update_card(cardData.id, {
-                            closed: true
-                        }, function (err, updCardResponse) {
-                            if (err) {
-                                error('Card close operation failed');
-                            }
-                            if (updCardResponse.closed) {
-                                info('Card closed: #' + card + ' --> ' + cardData.name);
-                            } else {
-                                error('Could not close card: ' + card);
-                            }
-                        });
-                    }
-                }
+            matchesArr.push(m);
+            cardActionsArr.push({
+                verb: m[2],
+                card: m[5],
             });
-        });
+        }
 
-    } else {
-        warn('No Trello mentions');
+        // Replace the matches collected in this step to be able to continue collecting in the next step
+        for (i = 0; i < matchesArr.length; i++) {
+            str = str.replace(matchesArr[i][0], matchesArr[i][2] + " ");
+        }
+    }
+    while (matchesArr.length > 0); // do {} while
+
+
+    console.dir(cardActionsArr);
+
+    for (i = 0; i < cardActionsArr.length; i++) {
+        card = cardActionsArr[i].card;
+        verb = cardActionsArr[i].verb;
+        console.log("cardID:" + card + "verb:" + verb);
+
+        updateTrelloCard(card, verb, commitInfo);
+
     }
 });
 
 
+function updateTrelloCard(card, verb, commitInfo) {
 
-function logfun(err, data) {
-    if (err) throw err;
-    info(data);
+    get_card(card, function (err, cardData) {
+
+        if (err) {
+            warn("[ERROR] Cannot find card matching ID " + card + " board ID =" + board_id);
+            return;
+        }
+
+        REPO_LINK = REPO_LINK.replace(/\/?$/, '/');
+        short_commit = commitInfo.commit.substring(0, 7);
+        var commitLink = '[' + short_commit + '](' + REPO_LINK + 'commit/' + commitInfo.commit + ')';
+
+        var comment = 'Commit by : ' + commitInfo.author + '\nDate : ' + commitInfo.date + '\nCommit : ' + commitLink +
+            '\nMessage : ' +
+            commitInfo.msg;
+
+
+        add_comment(cardData.id, comment, function (err, commentResponse) {
+            if (err) {
+                throw err;
+            } else {
+                //console.dir(data);
+                info('Card ' + cardData.name + ' updated');
+
+                // Archive/Close the card if needed
+                if (verb.indexOf('close') >= 0 || verb.indexOf('archive') >= 0 || verb.indexOf('fix') >= 0) {
+                    if (cardData.closed) {
+                        warn('Card ' + cardData.idShort + ' is already closed');
+                        return;
+                    }
+                    update_card(cardData.id, {
+                        closed: true
+                    }, function (err, updCardResponse) {
+                        if (err) {
+                            error('Card close operation failed');
+                        }
+                        if (updCardResponse.closed) {
+                            info('Card closed: #' + card + ' --> ' + cardData.name);
+                        } else {
+                            error('Could not close card: ' + cardData.id);
+                        }
+                    });
+                }
+            }
+        });
+    });
+
 }
 
-function get_card(board_id, card_id, fun) {
-    fun = fun || logfun;
-    t.get("/1/boards/" + board_id + "/cards/" + card_id, fun);
+
+function get_card(card_id, f) {
+    boardID = BOARD_ID;
+    console.log("get_card:" + card + "from  board:" + boardID);
+    t.get("/1/boards/" + boardID + "/cards/" + card_id, f);
 }
 
-function update_card(card_id, params, fun) {
-    fun = fun || logfun;
-    t.put("/1/cards/" + card_id, params, fun);
+function update_card(card_id, params, f) {
+    t.put("/1/cards/" + card_id, params, f);
 }
 
-function add_comment(card_id, comment, fun) {
-    fun = fun || logfun;
+function add_comment(card_id, comment, f) {
     t.post("/1/card/" + card_id + "/actions/comments", {
         text: comment
-    }, fun);
+    }, f);
 }
 
-function get_cards(list_id, fun) {
-    fun = fun || logfun;
+function get_cards(list_id, f) {
+
     t.get("/1/lists/" + list_id + "/cards", {
         fields: "idList,closed,name"
-    }, fun);
+    }, f);
 }
