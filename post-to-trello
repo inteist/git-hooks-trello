@@ -165,15 +165,13 @@ git.on('exit', function () {
     while (matchesArr.length > 0); // do {} while
 
 
-    console.dir(cardActionsArr);
+    //console.dir(cardActionsArr);
 
     for (i = 0; i < cardActionsArr.length; i++) {
         card = cardActionsArr[i].card;
-        verb = cardActionsArr[i].verb.toLowerCase();
-        console.log("cardID: " + card + "verb: " + verb);
+        verb = cardActionsArr[i].verb;
 
         updateTrelloCard(card, verb, commitInfo);
-
     }
 });
 
@@ -204,7 +202,7 @@ function updateTrelloCard(card, verb, commitInfo) {
                 info('Card ' + cardData.name + ' updated');
 
                 // Archive/Close the card if needed
-                if (verb.indexOf('close') >= 0 || verb.indexOf('archive') >= 0 || verb.indexOf('fix') >= 0) {
+                if(/close|archive|fix/i.test(verb)) {
                     if (cardData.closed) {
                         warn('Card ' + cardData.idShort + ' is already closed');
                         return;
@@ -230,9 +228,7 @@ function updateTrelloCard(card, verb, commitInfo) {
 
 
 function get_card(card_id, f) {
-    boardID = BOARD_ID;
-    console.log("get_card: " + card + "from  board: " + boardID);
-    t.get("/1/boards/" + boardID + "/cards/" + card_id, f);
+    t.get("/1/boards/" + BOARD_ID + "/cards/" + card_id, f);
 }
 
 function update_card(card_id, params, f) {
