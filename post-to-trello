@@ -169,8 +169,8 @@ git.on('exit', function () {
 
     for (i = 0; i < cardActionsArr.length; i++) {
         card = cardActionsArr[i].card;
-        verb = cardActionsArr[i].verb;
-        console.log("cardID:" + card + "verb:" + verb);
+        verb = cardActionsArr[i].verb.toLowerCase();
+        console.log("cardID: " + card + "verb: " + verb);
 
         updateTrelloCard(card, verb, commitInfo);
 
@@ -183,7 +183,7 @@ function updateTrelloCard(card, verb, commitInfo) {
     get_card(card, function (err, cardData) {
 
         if (err) {
-            warn("[ERROR] Cannot find card matching ID " + card + " board ID =" + board_id);
+            warn("[ERROR] Cannot find card matching ID " + card + " board ID = " + board_id);
             return;
         }
 
@@ -191,8 +191,8 @@ function updateTrelloCard(card, verb, commitInfo) {
         short_commit = commitInfo.commit.substring(0, 7);
         var commitLink = '[' + short_commit + '](' + REPO_LINK + 'commit/' + commitInfo.commit + ')';
 
-        var comment = 'Commit by : ' + commitInfo.author + '\nDate : ' + commitInfo.date + '\nCommit : ' + commitLink +
-            '\nMessage : ' +
+        var comment = 'Commit by: ' + commitInfo.author + '\nDate: ' + commitInfo.date + '\nCommit: ' + commitLink +
+            '\nMessage: ' +
             commitInfo.msg;
 
 
@@ -231,7 +231,7 @@ function updateTrelloCard(card, verb, commitInfo) {
 
 function get_card(card_id, f) {
     boardID = BOARD_ID;
-    console.log("get_card:" + card + "from  board:" + boardID);
+    console.log("get_card: " + card + "from  board: " + boardID);
     t.get("/1/boards/" + boardID + "/cards/" + card_id, f);
 }
 
