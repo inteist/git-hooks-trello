@@ -67,8 +67,10 @@ var BOARD_ID = "<REPLACE>";
 
 var EXIT_CODE_WRONG_CONFIG = 99;
 
-if(KEY.indexOf("REPLACE") > 0 || TOKEN.indexOf("REPLACE") > 0 || REPO_LINK.indexOf("REPLACE") > 0  || BOARD_ID.indexOf("REPLACE") > 0) {
-    error("Script not configured! Open 'post-to-trello' file and replace all the <REPLACE> values in the config section with correct values");
+if (KEY.indexOf("REPLACE") > 0 || TOKEN.indexOf("REPLACE") > 0 || REPO_LINK.indexOf("REPLACE") > 0 || BOARD_ID.indexOf("REPLACE") > 0) {
+    error(
+        "Script not configured! Open 'post-to-trello' file and replace all the <REPLACE> values in the config section with correct values"
+    );
 
     process.exit(EXIT_CODE_WRONG_CONFIG);
 }
@@ -202,7 +204,7 @@ function updateTrelloCard(card, verb, commitInfo) {
                 info('Card ' + cardData.name + ' updated');
 
                 // Archive/Close the card if needed
-                if(/close|archive|fix/i.test(verb)) {
+                if (/close|archive|fix/i.test(verb)) {
                     if (cardData.closed) {
                         warn('Card ' + cardData.idShort + ' is already closed');
                         return;
@@ -223,7 +225,6 @@ function updateTrelloCard(card, verb, commitInfo) {
             }
         });
     });
-
 }
 
 
@@ -242,7 +243,6 @@ function add_comment(card_id, comment, f) {
 }
 
 function get_cards(list_id, f) {
-
     t.get("/1/lists/" + list_id + "/cards", {
         fields: "idList,closed,name"
     }, f);
