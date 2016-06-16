@@ -39,7 +39,7 @@ var KEY = "<REPLACE>";
 var TOKEN = "<REPLACE>";
 var REPO_LINK = "<REPLACE>";
 var BOARD_ID = "<REPLACE>";
-
+var COMPLETED_LIST_ID = "<REPLACE>";
 
 /*            END CONFIG            */
 /*----------------------------------*/
@@ -170,7 +170,7 @@ git.on('exit', function () {
     for (i = 0; i < cardActionsArr.length; i++) {
         card = cardActionsArr[i].card;
         verb = cardActionsArr[i].verb.toLowerCase();
-        console.log("cardID: " + card + "verb: " + verb);
+        console.log("cardID:" + card + "verb:" + verb);
 
         updateTrelloCard(card, verb, commitInfo);
 
@@ -183,7 +183,7 @@ function updateTrelloCard(card, verb, commitInfo) {
     get_card(card, function (err, cardData) {
 
         if (err) {
-            warn("[ERROR] Cannot find card matching ID " + card + " board ID = " + board_id);
+            warn("[ERROR] Cannot find card matching ID " + card + " board ID =" + board_id);
             return;
         }
 
@@ -191,8 +191,8 @@ function updateTrelloCard(card, verb, commitInfo) {
         short_commit = commitInfo.commit.substring(0, 7);
         var commitLink = '[' + short_commit + '](' + REPO_LINK + 'commit/' + commitInfo.commit + ')';
 
-        var comment = 'Commit by: ' + commitInfo.author + '\nDate: ' + commitInfo.date + '\nCommit: ' + commitLink +
-            '\nMessage: ' +
+        var comment = 'Commit by : ' + commitInfo.author + '\nDate : ' + commitInfo.date + '\nCommit : ' + commitLink +
+            '\nMessage : ' +
             commitInfo.msg;
 
 
@@ -205,22 +205,22 @@ function updateTrelloCard(card, verb, commitInfo) {
 
                 // Archive/Close the card if needed
                 if (verb.indexOf('close') >= 0 || verb.indexOf('archive') >= 0 || verb.indexOf('fix') >= 0) {
+                    // verb.indexOf('Close') >= 0 || verb.indexOf('Archive') >= 0 || verb.indexOf('Fix') >= 0) {
                     if (cardData.closed) {
                         warn('Card ' + cardData.idShort + ' is already closed');
                         return;
                     }
                     update_card(cardData.id, {
-                        closed: true
+                        idList: COMPLETED_LIST_ID
                     }, function (err, updCardResponse) {
                         if (err) {
                             error('Card close operation failed');
-                        }
-                        if (updCardResponse.closed) {
-                            info('Card closed: #' + card + ' --> ' + cardData.name);
                         } else {
-                            error('Could not close card: ' + cardData.id);
+                            info('Card moved')
                         }
                     });
+                } else {
+                  info('Card will not be moved. No keywords found')
                 }
             }
         });
@@ -231,7 +231,7 @@ function updateTrelloCard(card, verb, commitInfo) {
 
 function get_card(card_id, f) {
     boardID = BOARD_ID;
-    console.log("get_card: " + card + "from  board: " + boardID);
+    console.log("get_card: " + card + " from  board: " + boardID);
     t.get("/1/boards/" + boardID + "/cards/" + card_id, f);
 }
 
@@ -246,7 +246,6 @@ function add_comment(card_id, comment, f) {
 }
 
 function get_cards(list_id, f) {
-
     t.get("/1/lists/" + list_id + "/cards", {
         fields: "idList,closed,name"
     }, f);
