@@ -40,6 +40,7 @@ var TOKEN = "<REPLACE>";
 var REPO_LINK = "<REPLACE>";
 var BOARD_ID = "<REPLACE>";
 
+var COMPLETED_LIST_ID = "<REPLACE>";
 
 /*            END CONFIG            */
 /*----------------------------------*/
@@ -234,6 +235,10 @@ function get_card(card_id, f) {
 
 function update_card(card_id, params, f) {
     t.put("/1/cards/" + card_id, params, f);
+}
+
+function move_card(card_id, list_id, f) {
+    t.put("/1/cards/" + card_id + "/" + list_id , {} , f);
 }
 
 function add_comment(card_id, comment, f) {
