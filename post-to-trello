@@ -238,7 +238,7 @@ function update_card(card_id, params, f) {
 }
 
 function move_card(card_id, list_id, f) {
-    t.put("/1/cards/" + card_id + "/" + list_id , {} , f);
+    t.put("/1/cards/" + card_id + "/idList?value=" + list_id , {} , f);
 }
 
 function add_comment(card_id, comment, f) {
