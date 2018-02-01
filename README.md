@@ -42,7 +42,13 @@ sudo npm install -g node-trello
 ```bash
 sudo npm install -g colors
 ```
-- Clone this repo and copy the files to your project's `.git/hooks` folder
+- Clone this repo
+- make symlink to `post-commit` and `post-to-trello`
+
+```bash
+ln -s /link/to/your/post-commit .git/hooks/post-commit
+ln -s /link/to/your/post-to-trello .git/hooks/post-to-trello
+```
 - Make the hooks executable
 
 ```bash
@@ -70,11 +76,21 @@ chmod +x .git/hooks/*
 
 append `.json` to any URL while inside the board and look for `id: "BOARD_ID",`
 
+find completed board id this way as well.
+
 - **STEP 4** replace
 
-`key`, `token` and `board_id` with the values obtained in steps 1-3
+`key`, `token` and `board_id` `completed_board_id` with the values obtained in steps 1-3
 
-replace `repo_link` with your repo root URL in the `post-to-trello` script
+Set environment variables.
+
+```
+export TRELLO_KEY="key"
+export TRELLO_TOKEN="token"
+export BOARD_ID="board ID"
+export REPO_LINK="link to your repostiory"
+export COMPLETED_LIST_ID="completed board id"
+```
 
 
 
